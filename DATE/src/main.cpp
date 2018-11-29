@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <NFC.h>
 uint8_t aaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
-void connectGSM(String cmd,char *res)
+void connectGSM(String cmd,char *res)//带应答的GSMAT命令
 {
     while(1)
     {
