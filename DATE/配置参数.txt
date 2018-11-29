@@ -1,0 +1,9 @@
+AT+CSTT="CMNET" 
+AT+CIICR
+AT+CIFSR
+AT+CIPSTART="TCP","139.129.53.70","8989" 
+Serial.print("AT\r\n")
+ Serial.print("AT+CSTT=\"CMNET\"\r\n")
+
+//鲁LDB030UID           3152146843  16进制bbe1f19b
+//测试机器号 200019       16进制00030d53
