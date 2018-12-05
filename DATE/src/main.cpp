@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <NFC.h>
+bool inittemp = 0;
+int p[15];
 uint8_t aaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
 void connectGSM(String cmd,char *res)//带应答的GSMAT命令
 {
@@ -8,9 +10,9 @@ void connectGSM(String cmd,char *res)//带应答的GSMAT命令
         Serial.println(cmd);
         Serial1.println(cmd);
         delay(500);
-        while(Serial.available()>0)
+        while(Serial1.available()>0)
         {
-            if(Serial.find(res))
+            if(Serial1.find(res))
             {
                 delay(1000);
                 return;
@@ -36,7 +38,9 @@ void initGPRS()
     delay(1000);
     Serial1.println("AT+CIFSR");
     delay(1000);
-    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"34176\"","OK");
+    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"37217\"","OK");
+    //connectGSM("AT+CIPSTART=\"TCP\",\"139.129.53.70s\",\"8989\"","OK");
+    inittemp = 1;
 }
 
 
@@ -93,7 +97,27 @@ void loop()
     digitalWrite(13,LOW);
     NFC_loop();
     */
-   initGSM();
-   delay(1000);
-   initGPRS();
+   if(inittemp == 0)
+   {
+        initGSM();
+        delay(1000);
+        initGPRS();
+   }
+
+
+   /* while(Serial1.available()>0)
+        {
+          
+            //p = Serial1.read();
+            //p = 11;
+            for(int atemp = 0;atemp < 5;atemp++)
+            {
+                p[atemp] = Serial1.read();
+                Serial.println(p[atemp],HEX);
+                
+            }
+           
+            
+        }
+        */
 }
