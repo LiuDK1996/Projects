@@ -4,8 +4,8 @@
 #include <CN_SSD1306.h>  
 #include <Adafruit_ssd1306syp.h>
 
-#define SDA_PIN 8
-#define SCL_PIN 9
+#define SDA_PIN 12
+#define SCL_PIN 11
 Adafruit_ssd1306syp display(SDA_PIN,SCL_PIN);
 CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 
@@ -25,6 +25,7 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 
 #define diancifa1 31
 #define huanxiangfa1 25
+#define huanxiangfa2 26
 #define diancifa2 30
 #define xichenqi 23
 #define diancifa3 28
@@ -37,6 +38,7 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
  *洗尘  xichenqi
  *洗手  diancifa2 zixibeng
  *
+ *排空  huangxiangfa2 kongyaji 
  */
                                                
 int a,
@@ -49,6 +51,25 @@ int f = 0,
     h = 0,
     //i = 0,
     j = 0;
+int 
+    time_100ms_1s = 0,
+    time_100ms_2s = 0,
+    time_100ms_5s = 0,
+    time_100ms_30s = 0,
+    time_100ms_60s = 0,
+    time_100ms_300s = 0;
+
+
+ 
+bool 
+    Paikongflag = 0,
+    time_100ms_1sflag = 0,
+    time_100ms_2sflag = 0,
+    time_100ms_5sflag = 0,
+    time_100ms_30sflag = 0,
+    time_100ms_60sflag = 0,
+    time_100ms_300sflag = 0;
+  
 
  unsigned char i;
 
@@ -153,6 +174,9 @@ void Jiesuan()
    }
 }
 
+void Paikong()
+}
+
 //OLED显示
 void displayoled()
 {
@@ -166,6 +190,7 @@ void displayoled()
  // display.setTextColor(BLACK,WHITE);
   //display.print("0x"); 
   //display.println(c);
+  
   int cold;
   cold = d;
   NOP; NOP; NOP; NOP; NOP; NOP;
@@ -224,8 +249,50 @@ void displayoled()
 
 void flash()
 {
+  time_100ms_1s += 1;
+  time_100ms_2s += 1;
+  time_100ms_5s += 1;
+  time_100ms_30s += 1;
+  time_100ms_60s += 1;
+  time_100ms_300s += 1;
+  if(time_100ms_5s == 50)
+  {
+    time_100ms_5s = 0;
+    c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+  }
+  if(time_100ms_1s == 15)
+  {
+    time_100ms_1s = 0;
+  }
+  if(time_100ms_2s == 25)
+  {
+    time_100ms_2s = 0;
+  }
+  if(time_100ms_5s == 55)
+  {
+    time_100ms_5s = 0;
+  }
+  if(time_100ms_30s == 305)
+  {
+    time_100ms_30s = 0;
+  }
+  if(time_100ms_60s == 605)
+  {
+    time_100ms_60s = 0;
+  }
+  if(time_100ms_300s == 3005)
+  {
+    time_100ms_300s = 0;
+  }
+
+  
  // display.update();
- c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+ //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+}
+
+void calculate_time()//时间计算
+{
+
 }
 void setup() {
   // put your setup code here, to run once:
@@ -253,7 +320,7 @@ void setup() {
 
   Serial.begin(9600);
 
-  FlexiTimer2::set(5000,flash);
+  FlexiTimer2::set(100,flash);//100毫秒
   FlexiTimer2::start();
 
 }
@@ -280,6 +347,7 @@ void loop()
       if(digitalRead(qingshui) == 0)
       {
         Qingshui();
+        Paikongflag = 1;
         if(digitalRead(qingshui) == 1)
         Jiesuan();
       }
@@ -290,6 +358,7 @@ void loop()
         if(digitalRead(paomo) == 0) 
         {
           Paomo();
+          Paikongflag = 1;
           if(digitalRead(paomo) == 1) 
           //Jiesuan();
           PaomoStop();
@@ -302,6 +371,7 @@ void loop()
        if(digitalRead(xishou) == 0)
        {
           Xishou();
+          Paikongflag = 1;
           if(digitalRead(xishou) == 1) 
           Jiesuan();
         }  
@@ -315,10 +385,74 @@ void loop()
         if(digitalRead(xichen) == 0) 
         {
           Xichen(); 
+          Paikongflag = 1;
           if(digitalRead(xichen) == 1) 
           Jiesuan(); 
          }
       
+     }
+     //Paikongflag = 1;
+     if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1))
+     {
+       time_100ms_300sflag = 1;
+       //time_100ms_300s = 0;
+       //Serial.println("作业结束 等待排空");
+       //Serial.end();
+       if((time_100ms_300sflag == 1)&&(time_100ms_300s == 3000))//停机后5分钟执行排空 开换向阀1
+       {
+        time_100ms_300sflag = 0;
+        time_100ms_1sflag = 1;
+        //time_100ms_300s == 0;
+       // time_100ms_1s = 0;
+        digitalWrite(huanxiangfa1,HIGH);
+        //Serial.begin(9600);
+        //Serial.println("换向阀1已开");
+        //Serial.end();
+       }
+       if((time_100ms_1sflag ==1)&&(time_100ms_1s == 10 ))// 1S后开空压机
+       {
+        digitalWrite(kongyaji,HIGH);
+        time_100ms_1sflag = 0;
+        time_100ms_30sflag = 1;
+        //time_100ms_30s = 0;
+        //Serial.begin(9600);
+        //Serial.println("空压机已开");
+        //Serial.end();
+      }
+       if((time_100ms_30sflag == 1)&&(time_100ms_30s == 300))//开空压机后 30S关换向阀1 开换向阀2
+       {
+        time_100ms_30sflag = 0;
+        time_100ms_60sflag = 1;
+        //time_100ms_60s = 0;
+        digitalWrite(huanxiangfa1,LOW);
+        digitalWrite(huanxiangfa1,HIGH);
+        //Serial.begin(9600);
+        //Serial.println("换向阀2已开");
+        //Serial.end();
+       }
+       if((time_100ms_60sflag == 1)&&(time_100ms_60s == 600))//执行60S后关空压机
+       {
+         time_100ms_60sflag = 0;
+         time_100ms_2sflag = 1;
+         //time_100ms_2s = 0;
+         digitalWrite(kongyaji,LOW);
+         //Serial.begin(9600);
+         //Serial.println("空压机已关");
+         //Serial.end();
+       }
+       if((time_100ms_2sflag == 1)&&(time_100ms_2s == 20))//2S后关换向阀
+       {
+         time_100ms_2sflag = 0;
+         digitalWrite(huanxiangfa2,LOW);
+         //Serial.begin(9600);
+         //Serial.println("换向阀已关 排空完成");
+         //Serial.end();
+         Paikongflag = 0;
+       }
+         
+      
+
+
      }
      while(digitalRead(jiesuan) == 0)
       {  

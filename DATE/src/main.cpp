@@ -2,6 +2,7 @@
 #include <NFC.h>
 bool inittemp = 0;
 int p[15];
+char temp = -1;
 uint8_t aaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
 void connectGSM(String cmd,char *res)//带应答的GSMAT命令
 {
@@ -38,11 +39,65 @@ void initGPRS()
     delay(1000);
     Serial1.println("AT+CIFSR");
     delay(1000);
-    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"37217\"","OK");
+    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"41830\"","OK");
     //connectGSM("AT+CIPSTART=\"TCP\",\"139.129.53.70s\",\"8989\"","OK");
     inittemp = 1;
 }
+/*
+void receive()
+{
+    const int flag = 0;
+    const int num = 0;
+    while(Serial1.available() > 0)
+    {
+        
+        temp = Serial1.read();
+        delay(2);
+        if(temp ==0x01 || temp == 0x00 || flag == 1)
+        {
+            flag = 1;
+            DateBuf[num] = temp;
+            num++;
+            if(num == (DateBuf[6] + 7))
+            {
+                num = 0;
+                flag = 0;
+            }
+        }
+    }
 
+    if(DateBuf[5] = 0xC9)//时间同步-下发时间
+    {
+
+    }
+
+    if(DateBuf[5] = 0xCA)//读设置项-语音播报
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCB)//上传状态
+    {
+        
+    }
+
+    if(DateBuf[5] = 0x66)//账户验证-下发用户余额-语音播报
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCC)//预结算
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCD)//结算
+    {
+         
+    }
+
+
+}*/
 
 void sendinit()
 {

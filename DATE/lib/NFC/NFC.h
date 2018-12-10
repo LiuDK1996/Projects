@@ -142,7 +142,7 @@ void NFC_loop()
             // send_ID();
             //send_id();
             copy_UID();
-            send_4();
+            send_4();//账户验证
             delay(50);
         }
     }
