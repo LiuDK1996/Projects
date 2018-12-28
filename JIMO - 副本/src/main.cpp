@@ -3,19 +3,17 @@
 #include <FlexiTimer2.h>
 #include <CN_SSD1306.h>  
 #include <Adafruit_ssd1306syp.h>
+#include <Arduino.h>
 #include <DallasTemperature.h>
 #include <OneWire.h>
-
 #define ONE_WIRE_BUS A0
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-
+//CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 #define SDA_PIN 12
 #define SCL_PIN 11
 Adafruit_ssd1306syp display(SDA_PIN,SCL_PIN);
-CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 
-#define NOP do { __asm__ __volatile__ ("nop"); } while (0)
 //输入
 #define qingshui 36
 #define paomo 37
@@ -44,7 +42,6 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
  *洗尘  xichenqi
  *洗手  diancifa2 zixibeng
  *
- *排空  huangxiangfa2 kongyaji 
  */
                                                
 int a,
@@ -57,6 +54,7 @@ int f = 0,
     h = 0,
     //i = 0,
     j = 0;
+
 int 
     time_100ms_1s = 0,
     time_100ms_2s = 0,
@@ -102,28 +100,6 @@ void MG99r()
   if(digitalRead(44) == 0&&digitalRead(45) == 1)//有进水 上液位有水
     myservo.writeMicroseconds(1500); //正常状态 立起
 }
-
-/*void LM35()
-{
-  
-  c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
-  delay(10);
-  if(c <= 5)
-  {
-    digitalWrite(fever,HIGH);
-  }
-
-  if(c >= 10)
-  {
-    digitalWrite(fever,LOW);
-  }
-
-  //delay(5); 
-  Serial.print ("当前温度为：");
-  Serial.print (c);
-  Serial.println ("度");
-
-}*/
 //清水
 void Qingshui()
 {
@@ -180,12 +156,6 @@ void Jiesuan()
    }
 }
 
-void Paikong()
-{
-
-}
-
-//OLED显示
 void displayoled()
 {
   //display.drawLine(0, 0, 127, 63,WHITE);
@@ -201,8 +171,6 @@ void displayoled()
   
   int cold;
   cold = d;
-  NOP; NOP; NOP; NOP; NOP; NOP;
-  NOP; NOP; NOP; NOP; NOP; NOP;
   // delay(500);
   d = c;  //温度采集
   //c = 3;
@@ -255,8 +223,7 @@ void displayoled()
 
  }
 
-
-void flash()
+ void flash()
 {
   time_100ms_1s += 1;
   time_100ms_2s += 1;
@@ -266,8 +233,10 @@ void flash()
   time_100ms_300s += 1;
   if(time_100ms_5s == 50)
   {
-    time_100ms_5s = 0;
-    c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+    //time_100ms_5s = 0;
+    //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+    sensors.requestTemperatures(); //发送获取温度的命令
+    c = sensors.getTempCByIndex(0);
   }
   if(time_100ms_1s == 15)
   {
@@ -299,10 +268,7 @@ void flash()
  //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
 }
 
-void calculate_time()//时间计算
-{
 
-}
 void setup() {
   // put your setup code here, to run once:
   for(a = 22;a < 35;a += 1)
@@ -322,15 +288,12 @@ void setup() {
 
   delay(1000);
   display.initialize();
-  delay(50);
-  //display.update();
 
   myservo.attach(10 );//定义舵机接口
-
-  Serial.begin(9600);
-
-  FlexiTimer2::set(100,flash);//100毫秒
+   FlexiTimer2::set(100,flash);//100毫秒
   FlexiTimer2::start();
+
+  sensors.begin();
 
 }
 
@@ -338,17 +301,19 @@ void loop()
 {
   // put your main code here, to run repeatedly:
  // while (digitalRead(zhuangtai) == 0)
-
-
    while (1)
   {
-    
-    displayoled();
-    //display.clear();
+    //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+    //displayoled();
+
+    if(d <= 5)
+    digitalWrite(fever,HIGH);//开加热;
+    if(d >= 10)
+     digitalWrite(fever,LOW);
+
 
     
     MG99r();
-    //LM35();
 
     if(digitalRead(qingshui) == 0)
     {
@@ -356,9 +321,13 @@ void loop()
       if(digitalRead(qingshui) == 0)
       {
         Qingshui();
-       // Paikongflag = 1;
+        Paikongflag = 0;
         if(digitalRead(qingshui) == 1)
-        Jiesuan();
+        {
+          Jiesuan();
+          Paikongflag = 1;
+        }
+       
       }
     }
      if(digitalRead(paomo) == 0) 
@@ -367,10 +336,14 @@ void loop()
         if(digitalRead(paomo) == 0) 
         {
           Paomo();
-         // Paikongflag = 1;
+          Paikongflag = 0; 
           if(digitalRead(paomo) == 1) 
+          {
+            PaomoStop();
+            Paikongflag = 1;
+          }
           //Jiesuan();
-          PaomoStop();
+         
         } 
      }
 
@@ -380,9 +353,13 @@ void loop()
        if(digitalRead(xishou) == 0)
        {
           Xishou();
-         // Paikongflag = 1;
+          Paikongflag = 0;
           if(digitalRead(xishou) == 1) 
-          Jiesuan();
+          {
+            Jiesuan();
+            Paikongflag = 1;
+          }
+          
         }  
        
       }
@@ -394,13 +371,16 @@ void loop()
         if(digitalRead(xichen) == 0) 
         {
           Xichen(); 
-         // Paikongflag = 1;
+          Paikongflag = 0;
           if(digitalRead(xichen) == 1) 
-          Jiesuan(); 
+          {
+            Jiesuan(); 
+            Paikongflag = 1;
+          }
+          
          }
       
      }
-     //Paikongflag = 1;
      if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1))
      {
        time_100ms_300sflag = 1;
