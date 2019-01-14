@@ -1,0 +1,66 @@
+if(digitalRead(qingshui) == 0)
+    {
+      delay(5);
+      if(digitalRead(qingshui) == 0)
+      {
+        Qingshui();
+        Paikongflag = 0;
+        if(digitalRead(qingshui) == 1)
+        {
+          Jiesuan();
+          Paikongflag = 1;
+        }
+       
+      }
+    }
+     if(digitalRead(paomo) == 0) 
+     {
+        delay(5);
+        if(digitalRead(paomo) == 0) 
+        {
+          Paomo();
+          Paikongflag = 0; 
+          if(digitalRead(paomo) == 1) 
+          {
+            PaomoStop();
+            Paikongflag = 1;
+          }
+          //Jiesuan();
+         
+        } 
+     }
+
+     if(digitalRead(xishou) == 0) 
+     {
+       delay(5); 
+       if(digitalRead(xishou) == 0)
+       {
+          Xishou();
+          Paikongflag = 0;
+          if(digitalRead(xishou) == 1) 
+          {
+            Jiesuan();
+            Paikongflag = 1;
+          }
+          
+        }  
+       
+      }
+    
+     if(digitalRead(xichen) == 0) 
+     {
+       
+        delay(5);
+        if(digitalRead(xichen) == 0) 
+        {
+          Xichen(); 
+          Paikongflag = 0;
+          if(digitalRead(xichen) == 1) 
+          {
+            Jiesuan(); 
+            Paikongflag = 1;
+          }
+          
+         }
+      
+     }

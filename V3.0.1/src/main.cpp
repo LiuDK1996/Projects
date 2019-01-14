@@ -1,8 +1,10 @@
 #include <Servo.h> 
-#include <MsTimer2.h> 
+#include <NFC.h>
+//#include <MsTimer2.h> 
 #include <FlexiTimer2.h>
 #include <CN_SSD1306.h>  
 #include <Adafruit_ssd1306syp.h>
+#include <Arduino.h>
 //#include <DallasTemperature.h>
 //#include <OneWire.h>
 
@@ -25,16 +27,18 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 #define zhuangtai 41
 //输出
 #define gaoyabeng 22
+#define xichenqi 23
 #define kongyaji 24
-#define zengyabeng 29
-#define gemobeng 27
-
-#define diancifa1 31
 #define huanxiangfa1 25
 #define huanxiangfa2 26
-#define diancifa2 30
-#define xichenqi 23
+#define gemobeng 27
 #define diancifa3 28
+#define zengyabeng 29
+#define diancifa2 30
+#define diancifa1 31
+
+
+
 #define fever 32 //加热
 
 
@@ -49,9 +53,13 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
                                                
 int a,
     b, 
-    c,
     d,
-    e;
+    e,
+    cold;
+float c,
+      c1,
+      c2,
+      c3;
 int f = 0,
     g = 0,
     h = 0,
@@ -61,8 +69,8 @@ int
     time_100ms_1s = 0,
     time_100ms_2s = 0,
     time_100ms_5s = 0,
-    time_100ms_30s = 0,
     time_100ms_60s = 0,
+    time_100ms_90s = 0,
     time_100ms_300s = 0;
 
 
@@ -72,9 +80,14 @@ bool
     time_100ms_1sflag = 0,
     time_100ms_2sflag = 0,
     time_100ms_5sflag = 0,
-    time_100ms_30sflag = 0,
     time_100ms_60sflag = 0,
+    time_100ms_90sflag = 0,
     time_100ms_300sflag = 0;
+
+bool inittemp = 0;
+int p[15];
+char temp = -1;
+uint8_t aaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
   
 
  unsigned char i;
@@ -82,15 +95,146 @@ bool
 
 Servo myservo;//定义舵机变量名
 
+void connectGSM(String cmd,char *res)//带应答的GSMAT命令
+{
+    while(1)
+    {
+        Serial.println(cmd);
+        Serial1.println(cmd);
+        delay(500);
+        while(Serial1.available()>0)
+        {
+            if(Serial1.find(res))
+            {
+                delay(1000);
+                return;
+            }
+        }
+        delay(1000);
+    }
+}
+void initGSM()
+{
+    connectGSM("AT","OK");//AT测试
+    connectGSM("ATE1","OK");//开显示
+    connectGSM("AT+CPIN?","READY");//是否插卡
+
+}
+
+void initGPRS()
+{
+    connectGSM("AT+CIPSHUT","OK");
+    connectGSM("AT+CGATT=1","OK");
+    connectGSM("AT+CSTT=\"CMNET\"","OK");
+    connectGSM("AT+CIICR","OK");
+    delay(1000);
+    Serial1.println("AT+CIFSR");
+    delay(1000);
+    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"41830\"","OK");
+    //connectGSM("AT+CIPSTART=\"TCP\",\"139.129.53.70s\",\"8989\"","OK");
+    inittemp = 1;
+}
+/*
+void receive()
+{
+    const int flag = 0;
+    const int num = 0;
+    while(Serial1.available() > 0)
+    {
+        
+        temp = Serial1.read();
+        delay(2);
+        if(temp ==0x01 || temp == 0x00 || flag == 1)
+        {
+            flag = 1;
+            DateBuf[num] = temp;
+            num++;
+            if(num == (DateBuf[6] + 7))
+            {
+                num = 0;
+                flag = 0;
+            }
+        }
+    }
+
+    if(DateBuf[5] = 0xC9)//时间同步-下发时间
+    {
+
+    }
+
+    if(DateBuf[5] = 0xCA)//读设置项-语音播报
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCB)//上传状态
+    {
+        
+    }
+
+    if(DateBuf[5] = 0x66)//账户验证-下发用户余额-语音播报
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCC)//预结算
+    {
+        
+    }
+
+    if(DateBuf[5] = 0xCD)//结算
+    {
+         
+    }
+
+
+}*/
+
+void sendinit()
+{
+    Serial1.print("AT+CSTT=\"CMNET\"\r\n");
+    delay(500);
+    Serial1.print("AT+CIICR\r\n");
+    delay(500);
+    Serial1.print("AT+CIFSR\r\n");
+    delay(500);
+    Serial1.print("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"34176\"\r\n");
+    delay(500);
+    //Serial.print("");
+    Serial1.print("AT+CIPSEND\r\n");
+    delay(500);
+    Serial1.write(aaa,22);
+    Serial.println("");
+    delay(500);
+    Serial1.write("1A\r\n");
+    delay(500);
+
+    Serial3.print("AT+CSTT=\"CMNET\"\r\n");
+    delay(5000);
+    Serial3.print("AT+CIICR\r\n");
+    delay(5000);
+    Serial3.print("AT+CIFSR\r\n");
+    delay(5000);
+    Serial3.print("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"34176\"\r\n");
+ 
+    
+   
+   
+}
+
 
 //舵机控制程序
 /* 
+44 水流传感
+45 高水位
+46 低水位
+
 液位 有感为1 无感为0
 水流 有感为0 无感为1
 */
 void MG99r()
 {
-  if(digitalRead(46) == 0)// 低液位无水
+  if(digitalRead(46) == 0)// 低水位无水
     {
       myservo.writeMicroseconds(2495); //禁用状态 放下
       // pinMode(9, INPUT_PULLUP);
@@ -99,16 +243,21 @@ void MG99r()
   else 
     myservo.writeMicroseconds(1500); //正常状态 立起
 
-  if(digitalRead(44) == 0&&digitalRead(45) == 1)//有进水 上液位有水
+  if(digitalRead(44) == 0&&digitalRead(45) == 1)//有进水 上水位有水
     myservo.writeMicroseconds(1500); //正常状态 立起
 }
 
-/*void LM35()
+void LM35()
 {
   
-  c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
-  delay(10);
-  if(c <= 5)
+  c1 = (analogRead(A0) * 5.0 ) /1024 *100;
+  delayMicroseconds(100);
+  c2 = (analogRead(A0) * 5.0 ) /1024 *100;
+  delayMicroseconds(100);
+  c3 = (analogRead(A0) * 5.0 ) /1024 *100;
+  delayMicroseconds(100);
+  c = (c1+c2+c3)/3.0;
+  /*if(c <= 5)
   {
     digitalWrite(fever,HIGH);
   }
@@ -116,14 +265,9 @@ void MG99r()
   if(c >= 10)
   {
     digitalWrite(fever,LOW);
-  }
+  }*/
 
-  //delay(5); 
-  Serial.print ("当前温度为：");
-  Serial.print (c);
-  Serial.println ("度");
-
-}*/
+}
 //清水
 void Qingshui()
 {
@@ -199,18 +343,17 @@ void displayoled()
   //display.print("0x"); 
   //display.println(c);
   
-  int cold;
   cold = d;
-  NOP; NOP; NOP; NOP; NOP; NOP;
-  NOP; NOP; NOP; NOP; NOP; NOP;
+  //NOP; NOP; NOP; NOP; NOP; NOP;
+  //NOP; NOP; NOP; NOP; NOP; NOP;
   // delay(500);
   d = c;  //温度采集
   //c = 3;
-  if(d != cold)
+ /* if(d != cold)//温度不同刷新屏幕 已弃用 改为5S刷新
   {
     display.update();
     Serial.println(d);
-  }
+  }*/
 
   if(d <= 5)
   {
@@ -261,13 +404,19 @@ void flash()
   time_100ms_1s += 1;
   time_100ms_2s += 1;
   time_100ms_5s += 1;
-  time_100ms_30s += 1;
   time_100ms_60s += 1;
+   time_100ms_90s += 1;
   time_100ms_300s += 1;
+  
   if(time_100ms_5s == 50)
   {
-    time_100ms_5s = 0;
-    c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+    //time_100ms_5s = 0;
+    //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
+    //sensors.requestTemperatures(); //发送获取温度的命令
+    //c = sensors.getTempCByIndex(0);
+    //Serial.println(d);
+    display.update();//刷新屏幕显示
+
   }
   if(time_100ms_1s == 15)
   {
@@ -281,13 +430,12 @@ void flash()
   {
     time_100ms_5s = 0;
   }
-  if(time_100ms_30s == 305)
-  {
-    time_100ms_30s = 0;
-  }
   if(time_100ms_60s == 605)
   {
     time_100ms_60s = 0;
+  }  if(time_100ms_90s == 905)
+  {
+    time_100ms_90s = 0;
   }
   if(time_100ms_300s == 3005)
   {
@@ -299,10 +447,8 @@ void flash()
  //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
 }
 
-void calculate_time()//时间计算
-{
+//void calculate_time()//时间计算
 
-}
 void setup() {
   // put your setup code here, to run once:
   for(a = 22;a < 35;a += 1)
@@ -328,9 +474,20 @@ void setup() {
   myservo.attach(10 );//定义舵机接口
 
   Serial.begin(9600);
+ // Serial1.begin(9600);//SIM800C
+  Serial2.begin(115200);//NFC
+  //Serial3.begin(9600);
 
   FlexiTimer2::set(100,flash);//100毫秒
   FlexiTimer2::start();
+  NFC_int();
+
+  //sensors.begin();
+
+
+  //myservo.writeMicroseconds(2495); //禁用状态 放下
+
+  //delay(10000);
 
 }
 
@@ -342,23 +499,33 @@ void loop()
 
    while (1)
   {
-    
-    displayoled();
-    //display.clear();
 
-    
+    NFC_loop();
+    /*if(inittemp == 0)
+    {
+          initGSM();
+          delay(1000);
+          initGPRS();
+    }*/
+    displayoled();
+    //sensors.requestTemperatures(); //发送获取温度的命令
+    //c = sensors.getTempCByIndex(0);
+    //display.clear();
     MG99r();
     //LM35();
-
     if(digitalRead(qingshui) == 0)
     {
       delay(5);
       if(digitalRead(qingshui) == 0)
       {
         Qingshui();
-       // Paikongflag = 1;
+        Paikongflag = 0;
         if(digitalRead(qingshui) == 1)
-        Jiesuan();
+        {
+          Jiesuan();
+          Paikongflag = 1;
+        }
+        
       }
     }
      if(digitalRead(paomo) == 0) 
@@ -367,10 +534,15 @@ void loop()
         if(digitalRead(paomo) == 0) 
         {
           Paomo();
-         // Paikongflag = 1;
+          Paikongflag = 0;
           if(digitalRead(paomo) == 1) 
-          //Jiesuan();
-          PaomoStop();
+          {
+            //Jiesuan();
+            PaomoStop();
+            Paikongflag = 1;
+           
+          }
+          
         } 
      }
 
@@ -380,9 +552,13 @@ void loop()
        if(digitalRead(xishou) == 0)
        {
           Xishou();
-         // Paikongflag = 1;
+          Paikongflag = 0;
           if(digitalRead(xishou) == 1) 
-          Jiesuan();
+          {
+            Jiesuan();
+            Paikongflag = 1;
+          }
+          
         }  
        
       }
@@ -394,14 +570,18 @@ void loop()
         if(digitalRead(xichen) == 0) 
         {
           Xichen(); 
-         // Paikongflag = 1;
+          Paikongflag = 0;
           if(digitalRead(xichen) == 1) 
-          Jiesuan(); 
+          {
+            Jiesuan();
+            Paikongflag = 1;
+          }
+    
          }
       
      }
      //Paikongflag = 1;
-     if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1))
+     if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1)&&(d <= 15))//温度小于15
      {
        time_100ms_300sflag = 1;
        //time_100ms_300s = 0;
@@ -412,50 +592,57 @@ void loop()
         time_100ms_300sflag = 0;
         time_100ms_1sflag = 1;
         //time_100ms_300s == 0;
-       // time_100ms_1s = 0;
+        time_100ms_1s = 0;
         digitalWrite(huanxiangfa1,HIGH);
-        //Serial.begin(9600);
-        //Serial.println("换向阀1已开");
-        //Serial.end();
+        /*
+        Serial.begin(9600);
+        Serial.println("换向阀1已开");
+        Serial.end();*/
        }
        if((time_100ms_1sflag ==1)&&(time_100ms_1s == 10 ))// 1S后开空压机
        {
         digitalWrite(kongyaji,HIGH);
         time_100ms_1sflag = 0;
-        time_100ms_30sflag = 1;
-        //time_100ms_30s = 0;
-        //Serial.begin(9600);
-        //Serial.println("空压机已开");
-        //Serial.end();
-      }
-       if((time_100ms_30sflag == 1)&&(time_100ms_30s == 300))//开空压机后 30S关换向阀1 开换向阀2
-       {
-        time_100ms_30sflag = 0;
         time_100ms_60sflag = 1;
-        //time_100ms_60s = 0;
-        digitalWrite(huanxiangfa1,LOW);
-        digitalWrite(huanxiangfa1,HIGH);
-        //Serial.begin(9600);
-        //Serial.println("换向阀2已开");
-        //Serial.end();
-       }
-       if((time_100ms_60sflag == 1)&&(time_100ms_60s == 600))//执行60S后关空压机
+
+        time_100ms_60s = 0;
+        /*
+        Serial.begin(9600);
+        Serial.println("空压机已开");
+        Serial.end();*/
+      }
+       if((time_100ms_60sflag == 1)&&(time_100ms_60s == 600))//开空压机后 60S关换向阀1 开换向阀2
        {
-         time_100ms_60sflag = 0;
+        time_100ms_60sflag = 0;
+        time_100ms_90sflag = 1;
+        time_100ms_90s = 0;
+        digitalWrite(huanxiangfa1,LOW);
+        digitalWrite(huanxiangfa2,HIGH);
+        /*Serial.begin(9600);
+        Serial.println("换向阀1已关 换向阀2已开");
+        Serial.println(time_100ms_30s);
+        Serial.end();*/
+       }
+       if((time_100ms_90sflag == 1)&&(time_100ms_90s == 900))//执行90S后关空压机
+       {
+         time_100ms_90sflag = 0;
          time_100ms_2sflag = 1;
-         //time_100ms_2s = 0;
+         time_100ms_2s = 0;
          digitalWrite(kongyaji,LOW);
-         //Serial.begin(9600);
-         //Serial.println("空压机已关");
-         //Serial.end();
+         /*
+         Serial.begin(9600);
+         Serial.println("空压机已关");
+         Serial.end();*/
        }
        if((time_100ms_2sflag == 1)&&(time_100ms_2s == 20))//2S后关换向阀
        {
          time_100ms_2sflag = 0;
          digitalWrite(huanxiangfa2,LOW);
-         //Serial.begin(9600);
-         //Serial.println("换向阀已关 排空完成");
-         //Serial.end();
+         Jiesuan();
+         /*
+         Serial.begin(9600);
+         Serial.println("换向阀已关 排空完成");
+         Serial.end();*/
          Paikongflag = 0;
        }
          
@@ -471,9 +658,15 @@ void loop()
         
       }
 
-  
+    /*
+      44 高水位
+      45 泡沫低液位
+      46 低水位
+      47 水流传感
+    */
 
     /*
+   
     if(digitalRead(44) == 1&&digitalRead(47) == 0&&digitalRead(46) == 1)//停水 低水
     {
          myservo.writeMicroseconds(1700);

@@ -22,8 +22,8 @@ CN_SSD1306 lucky(SDA_PIN,SCL_PIN);
 #define paomo 37
 #define xichen 38
 #define xishou 39
-#define jiesuan 40
-#define zhuangtai 41
+//#define jiesuan 40
+#define zhuangtai 40
 //输出
 #define gaoyabeng 22
 #define xichenqi 23
@@ -67,8 +67,8 @@ int
     time_100ms_1s = 0,
     time_100ms_2s = 0,
     time_100ms_5s = 0,
-    time_100ms_30s = 0,
     time_100ms_60s = 0,
+    time_100ms_90s = 0,
     time_100ms_300s = 0;
 
 
@@ -78,8 +78,8 @@ bool
     time_100ms_1sflag = 0,
     time_100ms_2sflag = 0,
     time_100ms_5sflag = 0,
-    time_100ms_30sflag = 0,
     time_100ms_60sflag = 0,
+    time_100ms_90sflag = 0,
     time_100ms_300sflag = 0;
   
 
@@ -142,12 +142,13 @@ void Paomo()
   digitalWrite(diancifa3,HIGH);
   digitalWrite(gemobeng,HIGH);
   digitalWrite(diancifa1,HIGH);
-  delay(200);
+  delay(100);
   digitalWrite(zengyabeng,HIGH);
-  delay(200);
+  delay(100);
   digitalWrite(huanxiangfa1,HIGH);
-  delay(200);
+  delay(100);
   digitalWrite(kongyaji,HIGH);
+  delay(100);
 }
 //泡沫停止
 void PaomoStop()
@@ -158,23 +159,24 @@ void PaomoStop()
   delay(100);
   digitalWrite(diancifa3,LOW);
   digitalWrite(diancifa1,LOW);
-  delay(200);
+  delay(100);
   digitalWrite(huanxiangfa1,LOW);
-  delay(200);
+  delay(100);
 
 }
 //洗尘
 void Xichen()
 {
   digitalWrite(xichenqi,HIGH);
-  delay(200); 
+  delay(100); 
 }
 //洗手
 void Xishou()
 {
   digitalWrite(diancifa2,HIGH);
-  delay(200);
+  delay(100);
   digitalWrite(zengyabeng,HIGH);
+  delay(100);
 }
 //结算
 void Jiesuan()
@@ -267,8 +269,8 @@ void flash()
   time_100ms_1s += 1;
   time_100ms_2s += 1;
   time_100ms_5s += 1;
-  time_100ms_30s += 1;
   time_100ms_60s += 1;
+   time_100ms_90s += 1;
   time_100ms_300s += 1;
   
   if(time_100ms_5s == 50)
@@ -277,8 +279,8 @@ void flash()
     //c = (analogRead(A0) * 5.0 ) /1024 *100;  //温度采集
     //sensors.requestTemperatures(); //发送获取温度的命令
     //c = sensors.getTempCByIndex(0);
-    Serial.println(d);
-    display.update();//刷新屏幕显示
+    //Serial.println(d);
+    //display.update();//刷新屏幕显示
 
   }
   if(time_100ms_1s == 15)
@@ -293,13 +295,12 @@ void flash()
   {
     time_100ms_5s = 0;
   }
-  if(time_100ms_30s == 305)
-  {
-    time_100ms_30s = 0;
-  }
   if(time_100ms_60s == 605)
   {
     time_100ms_60s = 0;
+  }  if(time_100ms_90s == 905)
+  {
+    time_100ms_90s = 0;
   }
   if(time_100ms_300s == 3005)
   {
@@ -344,6 +345,11 @@ void setup() {
 
   //sensors.begin();
 
+
+  //myservo.writeMicroseconds(2495); //禁用状态 放下
+
+  //delay(10000);
+
 }
 
 void loop()
@@ -363,7 +369,7 @@ void loop()
     LM35();
     if(digitalRead(qingshui) == 0)
     {
-      delay(5);
+     // delay(50);
       if(digitalRead(qingshui) == 0)
       {
         Qingshui();
@@ -372,13 +378,14 @@ void loop()
         {
           Jiesuan();
           Paikongflag = 1;
+          time_100ms_300s = 0;
         }
         
       }
     }
      if(digitalRead(paomo) == 0) 
      {
-        delay(5);
+        //delay(50);
         if(digitalRead(paomo) == 0) 
         {
           Paomo();
@@ -388,6 +395,7 @@ void loop()
             //Jiesuan();
             PaomoStop();
             Paikongflag = 1;
+            time_100ms_300s = 0;
            
           }
           
@@ -396,7 +404,7 @@ void loop()
 
      if(digitalRead(xishou) == 0) 
      {
-       delay(5); 
+      // delay(50); 
        if(digitalRead(xishou) == 0)
        {
           Xishou();
@@ -405,6 +413,7 @@ void loop()
           {
             Jiesuan();
             Paikongflag = 1;
+            time_100ms_300s = 0;
           }
           
         }  
@@ -414,7 +423,7 @@ void loop()
      if(digitalRead(xichen) == 0) 
      {
        
-        delay(5);
+        //delay(50);
         if(digitalRead(xichen) == 0) 
         {
           Xichen(); 
@@ -423,13 +432,20 @@ void loop()
           {
             Jiesuan();
             Paikongflag = 1;
+            time_100ms_300s = 0;
           }
     
          }
       
      }
-     Paikongflag = 1;
-     if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1))
+
+     if(digitalRead(zhuangtai) == 1
+     )
+     {
+       Jiesuan();
+     }
+     //Paikongflag = 1;
+     if((digitalRead(xichen) == 1)&&(digitalRead(xishou) == 1)&&(digitalRead(paomo) == 1)&&(digitalRead(qingshui) == 1)&&(Paikongflag == 1)&&(d <= 15))//温度小于15
      {
        time_100ms_300sflag = 1;
        //time_100ms_300s = 0;
@@ -451,19 +467,19 @@ void loop()
        {
         digitalWrite(kongyaji,HIGH);
         time_100ms_1sflag = 0;
-        time_100ms_30sflag = 1;
+        time_100ms_60sflag = 1;
 
-        time_100ms_30s = 0;
+        time_100ms_60s = 0;
         /*
         Serial.begin(9600);
         Serial.println("空压机已开");
         Serial.end();*/
       }
-       if((time_100ms_30sflag == 1)&&(time_100ms_30s == 300))//开空压机后 30S关换向阀1 开换向阀2
+       if((time_100ms_60sflag == 1)&&(time_100ms_60s == 600))//开空压机后 60S关换向阀1 开换向阀2
        {
-        time_100ms_30sflag = 0;
-        time_100ms_60sflag = 1;
-        time_100ms_60s = 0;
+        time_100ms_60sflag = 0;
+        time_100ms_90sflag = 1;
+        time_100ms_90s = 0;
         digitalWrite(huanxiangfa1,LOW);
         digitalWrite(huanxiangfa2,HIGH);
         /*Serial.begin(9600);
@@ -471,9 +487,9 @@ void loop()
         Serial.println(time_100ms_30s);
         Serial.end();*/
        }
-       if((time_100ms_60sflag == 1)&&(time_100ms_60s == 600))//执行60S后关空压机
+       if((time_100ms_90sflag == 1)&&(time_100ms_90s == 900))//执行90S后关空压机
        {
-         time_100ms_60sflag = 0;
+         time_100ms_90sflag = 0;
          time_100ms_2sflag = 1;
          time_100ms_2s = 0;
          digitalWrite(kongyaji,LOW);
@@ -498,13 +514,6 @@ void loop()
 
 
      }
-     while(digitalRead(jiesuan) == 0)
-      {  
-          //delay(50);
-          //if(digitalRead(jiesuan) == 1)
-          Jiesuan();
-        
-      }
 
   
 

@@ -3,7 +3,7 @@
 bool inittemp = 0;
 int p[15];
 char temp = -1;
-uint8_t aaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
+uint8_t aaaa[] = "0000000000C90400032a8a";//请求服务器当前时间？
 void connectGSM(String cmd,char *res)//带应答的GSMAT命令
 {
     while(1)
@@ -24,9 +24,11 @@ void connectGSM(String cmd,char *res)//带应答的GSMAT命令
 }
 void initGSM()
 {
+    Serial1.print("AT+RESET");
+    delay(5000);
     connectGSM("AT","OK");//AT测试
-    connectGSM("ATE1","OK");//开显示
-    connectGSM("AT+CPIN?","READY");//是否插卡
+    connectGSM("ATE0","OK");//关显示
+    //connectGSM("AT+CPIN?","READY");//是否插卡
 
 }
 
@@ -34,13 +36,20 @@ void initGPRS()
 {
     connectGSM("AT+CIPSHUT","OK");
     connectGSM("AT+CGATT=1","OK");
+    //connectGSM("AT+CIPMODE=1","OK");
     connectGSM("AT+CSTT=\"CMNET\"","OK");
     connectGSM("AT+CIICR","OK");
-    delay(1000);
+    //delay(1000);
     Serial1.println("AT+CIFSR");
-    delay(1000);
-    connectGSM("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"41830\"","OK");
+    Serial1.println("AT+CIPQSEND=0");//0 慢发模式 1快发模式
+    Serial1.println("AT+CIPSPRT=2");//2不显示>和SEND
+    //delay(1000);
+    //connectGSM("AT+CIPSTART=\"TCP\",\"206i9l0870.imwork.net\",\"51069\"","OK");
+    connectGSM("AT+CIPSTART=\"TCP\",\"139.129.53.70\",\"8989\"","OK");
+    //delay(1000);
+    //connectGSM("AT+CIPSTART=\"TCP\",\"tt.ai-thinker.com\",\"43498\"","OK");
     //connectGSM("AT+CIPSTART=\"TCP\",\"139.129.53.70s\",\"8989\"","OK");
+    //inittemp = 1;
     inittemp = 1;
 }
 /*
@@ -99,44 +108,13 @@ void receive()
 
 }*/
 
-void sendinit()
-{
-    Serial.print("AT+CSTT=\"CMNET\"\r\n");
-    delay(500);
-    Serial.print("AT+CIICR\r\n");
-    delay(500);
-    Serial.print("AT+CIFSR\r\n");
-    delay(500);
-    Serial.print("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"34176\"\r\n");
-    delay(500);
-    //Serial.print("");
-    Serial.print("AT+CIPSEND\r\n");
-    delay(500);
-    Serial.write(aaa,22);
-    Serial.println("");
-    delay(500);
-    Serial.write("1A\r\n");
-    delay(500);
-
-    Serial3.print("AT+CSTT=\"CMNET\"\r\n");
-    delay(5000);
-    Serial3.print("AT+CIICR\r\n");
-    delay(5000);
-    Serial3.print("AT+CIFSR\r\n");
-    delay(5000);
-    Serial3.print("AT+CIPSTART=\"TCP\",\"122.114.122.174\",\"34176\"\r\n");
- 
-    
-   
-   
-}
 void setup() 
 {
     // put your setup code here, to run once:
-    Serial.begin(9600);
-    Serial1.begin(9600);//SIM800C
+    Serial.begin(115200);
+    Serial1.begin(115200);//SIM800C
     Serial2.begin(115200);//NFC
-    Serial3.begin(9600);
+    //Serial3.begin(9600);
     //delay(5000);
     //sendinit();
     //delay(500);
@@ -146,33 +124,49 @@ void setup()
 
 void loop()
 {
-   /*
-    digitalWrite(13,HIGH);
-    delay(500);
-    digitalWrite(13,LOW);
-    NFC_loop();
-    */
+   
+    //digitalWrite(13,HIGH);
+    //delay(500);
+   // digitalWrite(13,LOW);
+  
+    
    if(inittemp == 0)
    {
         initGSM();
         delay(1000);
         initGPRS();
    }
-
-
-   /* while(Serial1.available()>0)
-        {
-          
-            //p = Serial1.read();
-            //p = 11;
-            for(int atemp = 0;atemp < 5;atemp++)
-            {
-                p[atemp] = Serial1.read();
-                Serial.println(p[atemp],HEX);
-                
-            }
+    
+    NFC_loop();
+   
            
             
+        
+     /*while(Serial1.available()>0)
+      {
+        unsigned char i;
+        if(Serial.find("0x00"))
+        {
+            for(i=0;i<15;i++) 
+            {
+                receive_GPRS[i]= Serial1.read();
+                Serial.write(receive_GPRS[i]);
+            }
+        } 
+      }*/
+      
+     /* while(Serial1.available()>0)
+      {
+        unsigned char i = Serial1.read();
+        if(i == "0x00")
+        {
+          for(i=0;i<15;i++) 
+          {
+            receive_GPRS[i]= Serial1.read();
+            Serial.write(receive_GPRS[i]);
+          }
         }
-        */
+        
+        
+      }*/
 }

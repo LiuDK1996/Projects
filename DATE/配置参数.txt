@@ -1,4 +1,4 @@
-AT+CSTT="CMNET" 
+﻿AT+CSTT="CMNET" 
 AT+CIICR
 AT+CIFSR
 AT+CIPSTART="TCP","139.129.53.70","8989" 
@@ -6,9 +6,9 @@ Serial.print("AT\r\n")
  Serial.print("AT+CSTT=\"CMNET\"\r\n")
 
 //鲁LDB030UID           3152146843  16进制bbe1f19b
-//测试机器号 200019       16进制00030d53
+//测试机器号 200012      16进制 00030d4c
 
 帧头 桢尾
 0x00 
-
+心跳包 01
 收到用户余额后 设置标志位 再次刷卡结算

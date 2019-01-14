@@ -35,7 +35,7 @@ int time = 0;
 
 bool KEY_QingshuiState = 1;
 bool KEY_QingshuiOld = 1;
-void LED_OUT1(unsigned char X)
+void LED_OUT1(unsigned char X)//第一块数码管
 {
   unsigned char i;
   for(i=8;i>=1;i--)
@@ -54,7 +54,7 @@ void LED_OUT1(unsigned char X)
   }
 }
 
-void LED_OUT2(unsigned char X)
+void LED_OUT2(unsigned char X)//第二块数码管
 {
   unsigned char i;
   for(i=8;i>=1;i--)
@@ -75,7 +75,7 @@ void LED_OUT2(unsigned char X)
 
 
 
-void LED8_Display_deductions(void)
+void LED8_Display_deductions(void)//扣费显示
 {
   unsigned char *led_table;          // 查表指针
   unsigned char i;
@@ -212,14 +212,14 @@ void LED8_Display_deductions(void)
   //显示第8位
   led_table = LED_0F + num4%10;
   i = *led_table;
-  LED_OUT2(i);			
+  LED_OUT2(i);			 
   LED_OUT2(0x01);		
   digitalWrite(RCLK,LOW);
   digitalWrite(RCLK,HIGH);
 
 }
 
-void LED8_Display_time(void)
+void LED8_Display_time(void)//时间显示
 {
   unsigned char *led_table;          // 查表指针
   unsigned char i;
@@ -383,7 +383,7 @@ void calculate_deductions_Qingshui()//清水扣费计算
   }
 }
 
-void calculate_time()
+void calculate_time//时间计算
 {
   if(time == 1000)
   {
